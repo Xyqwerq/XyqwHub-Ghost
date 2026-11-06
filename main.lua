@@ -638,7 +638,7 @@ local SCRIPTS = {
     {Name = "Piggy Bots Control", Category = "Misc", URL = "https://robloxscripts.com/raw/control-piggy-bots"},
 }
 
--- ========== GHOST PATCH (ТЕЛЕМЕТРИЯ И ЛОГИ) ==========
+-- ========== GHOST PATCH (SAFE - NO NAMECALL) ==========
 local antiKickActive = false
 
 local function AddAntiKickLog(text)
@@ -654,7 +654,7 @@ local function StartAntiKick()
     antiKickActive = true
     getgenv().XyqwAntiKick = true
     
-    -- 1. Отключаем Анти-АФК
+    -- 1. Отключаем Анти-АФК (безопасно, без хуков)
     pcall(function()
         local VirtualUser = game:GetService("VirtualUser")
         if VirtualUser then
@@ -662,32 +662,30 @@ local function StartAntiKick()
             VirtualUser.ClickButton2 = function() end
         end
     end)
-    AddAntiKickLog("Anti-AFK disabled.")
+    AddAntiKickLog("Anti-AFK disabled (safe).")
     
-    -- 2. Ставим тихий хук (без блокировки киков)
-    local oldNamecall
-    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        
-        if not checkcaller() then
-            if method == "FireServer" then
-                local name = string.lower(self.Name)
-                if string.find(name, "log") or string.find(name, "telemetry") or string.find(name, "detect") then
-                    local fakeData = {
-                        type = "PlayerPosition",
-                        data = {position = Vector3.new(0, 0, 0), speed = 16, jumps = 0},
-                        timestamp = os.time()
-                    }
-                    AddAntiKickLog("Spoofed log: " .. self.Name)
-                    return oldNamecall(self, fakeData)
-                end
+    -- 2. Пытаемся найти логи BAC и просто их переименовать (без хуков)
+    local rs = game:GetService("ReplicatedStorage")
+    local count = 0
+    for _, obj in ipairs(rs:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            local name = string.lower(obj.Name)
+            if string.find(name, "logtelemetry") or string.find(name, "adEggBoostRemotes") then
+                pcall(function()
+                    obj.Name = "Xyqw_Safe_" .. math.random(1000, 9999)
+                    count = count + 1
+                end)
             end
         end
-        return oldNamecall(self, ...)
-    end)
+    end
     
-    AddAntiKickLog("Ghost Patch active (Telemetry Spoofer).")
-    ShowRobloxNotification("Ghost Patch: Active!", 3)
+    if count > 0 then
+        AddAntiKickLog("Renamed " .. count .. " log remotes (Safe Mode).")
+        ShowRobloxNotification("Ghost Patch: Active (Safe Mode)", 3)
+    else
+        AddAntiKickLog("Ghost Patch active (No logs found).")
+        ShowRobloxNotification("Ghost Patch: Active (Safe Mode)", 3)
+    end
 end
 
 local function StopAntiKick()
