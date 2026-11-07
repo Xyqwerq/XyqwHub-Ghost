@@ -60,13 +60,6 @@ pcall(function()
     if writefile then writefile("XyqwHub/Logs/session.txt", "active") end 
 end)
 
-game:BindToClose(function()
-    -- Если игрок вышел сам, удаляем файл
-    pcall(function() 
-        if delfile then delfile("XyqwHub/Logs/session.txt") end 
-    end)
-end)
-
 local function SaveTable(path, tbl)
     pcall(function() if writefile then writefile(path, game:GetService("HttpService"):JSONEncode(tbl)) end end)
 end
