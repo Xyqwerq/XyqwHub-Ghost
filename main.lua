@@ -55,6 +55,17 @@ pcall(function()
     if not isfolder(CONFIG_FOLDER .. "/Settings") then makefolder(CONFIG_FOLDER .. "/Settings") end
     if not isfolder(CONFIG_FOLDER .. "/Session") then makefolder(CONFIG_FOLDER .. "/Session") end
 end)
+-- Детектор кика
+pcall(function() 
+    if writefile then writefile("XyqwHub/Logs/session.txt", "active") end 
+end)
+
+game:BindToClose(function()
+    -- Если игрок вышел сам, удаляем файл
+    pcall(function() 
+        if delfile then delfile("XyqwHub/Logs/session.txt") end 
+    end)
+end)
 
 local function SaveTable(path, tbl)
     pcall(function() if writefile then writefile(path, game:GetService("HttpService"):JSONEncode(tbl)) end end)
